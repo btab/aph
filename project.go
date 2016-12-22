@@ -1,4 +1,4 @@
-package project
+package go-project-harness
 
 import (
 	"io/ioutil"
