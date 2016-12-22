@@ -1,4 +1,4 @@
-package go-project-harness
+package aph
 
 import (
 	"os"
