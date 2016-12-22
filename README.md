@@ -1,4 +1,4 @@
-# go-project-harness
+# APH (Andre's Project Harness)
 Extremely opinionated project harness based on my preferred project standards...
   * dep management
     * [glide](https://glide.sh/)
