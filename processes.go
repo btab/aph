@@ -7,6 +7,21 @@ import (
 	"os/exec"
 )
 
+func execute(name, path, verb string, args []string, f func(*exec.Cmd) error, wait bool) (*exec.Cmd, bool) {
+	log.Printf("%s %s", verb, name)
+
+	cmd := exec.Command(path, args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	if err := f(cmd); err != nil {
+		log.Printf("ERROR: while %s %s: %s", verb, name, err)
+		return cmd, false
+	}
+
+	return cmd, true
+}
+
 func kill(cmd *exec.Cmd, name string) {
 	log.Printf("killing %s", name)
 
@@ -20,15 +35,9 @@ func kill(cmd *exec.Cmd, name string) {
 }
 
 func run(name, path string, args []string) bool {
-	log.Printf("running %s", name)
-
-	out, err := exec.Command(path, args...).CombinedOutput()
-	if err != nil {
-		log.Printf("ERROR: while running %s: %s", name, out)
-		return false
-	}
-
-	return true
+	f := func(cmd *exec.Cmd) error { return cmd.Run() }
+	_, ok := execute(name, path, "running", args, f, true)
+	return ok
 }
 
 func runForEach(name, path string, commonArgs, eachArgs []string) bool {
@@ -42,15 +51,7 @@ func runForEach(name, path string, commonArgs, eachArgs []string) bool {
 }
 
 func start(name, path string, args []string) *exec.Cmd {
-	log.Printf("starting %s", name)
-
-	cmd := exec.Command(path, args...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
-	if err := cmd.Start(); err != nil {
-		log.Fatalf("ERROR: while starting %s: %s", name, err)
-	}
-
+	f := func(cmd *exec.Cmd) error { return cmd.Start() }
+	cmd, _ := execute(name, path, "starting", args, f, false)
 	return cmd
 }

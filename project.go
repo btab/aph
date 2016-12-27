@@ -11,6 +11,7 @@ import (
 
 type Project struct {
 	CheckLatestGoVersion bool
+	Executables          map[string][]string
 	Services             map[string][]string
 	SkipDirs             []string
 
@@ -48,6 +49,7 @@ func (p *Project) Run() {
 			runForEach("golint", "golint", []string{"-set_exit_status"}, dirs) &&
 			run("go test", "go", append([]string{"test"}, dirs...)) {
 			p.restartServices()
+			p.runExecutables()
 		}
 	})
 }
@@ -76,5 +78,13 @@ func (p *Project) restartServices() {
 		exePath := filepath.Join(p.tmpDir, goFile+".exe")
 		build(goFile, exePath)
 		p.serviceCmdsByFile[goFile] = start(goFile, exePath, args)
+	}
+}
+
+func (p *Project) runExecutables() {
+	for goFile, args := range p.Executables {
+		exePath := filepath.Join(p.tmpDir, goFile+".exe")
+		build(goFile, exePath)
+		run(goFile, exePath, args)
 	}
 }
